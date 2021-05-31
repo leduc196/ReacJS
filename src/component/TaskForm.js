@@ -1,22 +1,14 @@
 import React, {Component} from 'react';
 
-class AddWork extends Component {
+class TaskForm extends Component {
   // eslint-disable-next-line no-useless-constructor
   constructor(props){
     super(props);
     this.state = {
+      id : '',
       name : '',
       status : true,
     }
-    if(this.props.isUpdate === true)
-      this.modTask();
-  }
-
-  modTask = () => {
-    this.setState({
-      name : this.props.taskmod[0].name,
-      status : this.props.taskmod[0].status,
-    })
   }
 
   HideDiv = () =>{
@@ -37,9 +29,6 @@ class AddWork extends Component {
 
   onSubmit = (event) => {
     event.preventDefault();
-    // console.log(this.state);
-    // console.log(this.state.name);
-    // console.log(this.state.status);
     this.props.onSubmitApp(this.state);
     this.HideDiv();
   }
@@ -49,6 +38,30 @@ class AddWork extends Component {
       name : '',
       status : true
     })
+  }
+
+  componentWillMount() {
+    if(this.props.taskmod)
+      this.setState({
+        id : this.props.taskmod.id,
+        name : this.props.taskmod.name,
+        status : this.props.taskmod.status,
+      })
+  }
+
+  componentWillReceiveProps(nextProps){
+    if(nextProps && nextProps.taskmod)
+      this.setState({
+        id : nextProps.taskmod.id,
+        name : nextProps.taskmod.name,
+        status : nextProps.taskmod.status,
+      });
+    else
+      this.setState({
+        id : '',
+        name : '',
+        status : true
+      })
   }
 
   render(){
@@ -108,4 +121,4 @@ class AddWork extends Component {
   }
 }
 
-export default AddWork;
+export default TaskForm;

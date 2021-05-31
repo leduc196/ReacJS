@@ -4,6 +4,8 @@ import TaskForm from './component/TaskForm';
 import Search from './component/Search';
 import Sort from './component/Sort';
 import TaskList from './component/TaskList';
+import _ from 'lodash';
+import demo from './training/demo'
 
 class App extends Component {
 
@@ -14,8 +16,15 @@ class App extends Component {
       tasks : [],
       div : true,
       head : 'Thêm',
-      taskmod : [],
-      isUpdate: false,
+      taskmod : null,
+      filter : {
+        name : '',
+        stt: -1
+      },
+      sort : {
+        by : 'name',
+        value : 1
+      }
     }
   }
 
@@ -35,10 +44,11 @@ class App extends Component {
   }
 
   ShowDiv = () =>{
+    // if(this.state.)
     this.setState({
-      div : !this.state.div,
+      div : false,
       head : 'Thêm',
-      isUpdate : false,
+      taskmod : null
     })
   }
 
@@ -72,41 +82,39 @@ class App extends Component {
     + this.s4() + this.s4() + this.s4() + this.s4();
   }
 
-  ModTask = (id) =>{
+  ModTask = (id) => {
     var {tasks} = this.state;
-    var {taskmod} = this.state;
-    var task = tasks.filter(task => task.id === id);
-    taskmod = task;
+    var task = tasks.filter(task => task.id===id);
+    var taskmod = task[0];
     this.setState({
-      div : false,
-      head : 'Sửa',
       taskmod : taskmod,
-      isUpdate : true,
+      div : false,
+      head : 'Sửa'
     });
+    // localStorage.setItem('tasks',JSON.stringify(tasks));
   }
 
   onReceiveDataFromTaskForm = (data) => {
-    // console.log(data);
-    data.id = this.genID();
     var {tasks} = this.state;
-    tasks.push(data);
+    if(data.id === ''){
+      data.id = this.genID();
+      tasks.push(data);
+    }
+    else{
+      // var index = this.findIndex(data.id);
+      var index = _.findIndex(tasks,(task)=>{
+        return task.id === data.id
+      })
+      tasks[index] = data;
+    }
     this.setState({
       tasks : tasks
     })
     localStorage.setItem('tasks',JSON.stringify(tasks));
-    // console.log(data)
   }
 
   changeStt = (id) => {
     var {tasks} = this.state;
-    // var index = this.findIndex(id);
-    // if(index !== -1){
-    //   tasks[index].status = !tasks[index].status;
-    //   this.setState({
-    //     tasks : tasks
-    //   });
-    //   localStorage.setItem('tasks',JSON.stringify(tasks));
-    // }
     var task = tasks.filter(task => task.id===id);
     task[0].status = !task[0].status;
     this.setState({
@@ -115,22 +123,93 @@ class App extends Component {
     localStorage.setItem('tasks',JSON.stringify(tasks));
   }
 
-  // findIndex = (id) => {
-  //   var {tasks} = this.state;
-  //   tasks.forEach((task,index) => {
-  //     if(task.id === id)
-  //       return index;  
-  //   });
-  // }
+  findIndex = (id) => {
+    var rs =-1;
+    var {tasks} = this.state;
+    tasks.forEach((task,index) => {
+      if(task.id === id)
+        rs = index;  
+    });
+    return rs;
+  }
+
+  DelTask = (id) => {
+    var {tasks} = this.state;
+    var index = this.findIndex(id);
+    if(index !== -1){
+      tasks.splice(index,1);
+      this.setState({
+        tasks : tasks,
+        div : true
+      });
+      localStorage.setItem('tasks',JSON.stringify(tasks));
+    }
+    localStorage.setItem('tasks',JSON.stringify(tasks));
+  }
+
+  onFilter = (filterName, filterStt) => {
+    this.setState({
+      filter : {
+        name : filterName.toLowerCase(),
+        stt : parseInt(filterStt)
+      }
+    });
+  }
+
+  SearchValue = (data) => {
+    this.setState({
+      filter : {
+        name : data.toLowerCase(),
+        stt: this.state.filter.stt
+      }
+    });
+  }
+
+  CheckSort = (sortName, sortVal) => {
+    this.setState({
+      sort : {
+        name : sortName,
+        value: parseInt(sortVal)
+      }
+    });
+  }
 
   render(){
 
-    var { tasks,div } = this.state // cách viết của cs6 tương đương var tasks = this.state.tasks
+    var { tasks ,div, taskmod, filter, sort } = this.state // cách viết của cs6 tương đương var tasks = this.state.tasks
     var displayForm = div ? '' : <TaskForm CloseAppDiv = {this.SetAppDiv}
                                     Tieude = {this.state.head}
                                     onSubmitApp = { this.onReceiveDataFromTaskForm }
-                                    taskmod = { this.state.taskmod }
-                                    isUpdate = {this.state.isUpdate}/>
+                                    isUpdate = {this.state.isUpdate}
+                                    taskmod = {taskmod}/>
+    if(filter){
+      if(filter.name){
+        tasks = tasks.filter((task) => {
+          return task.name.toLowerCase().indexOf(filter.name) !== -1;
+        });
+      }
+      tasks = tasks.filter((task) => {
+        if( filter.stt === -1) 
+          return task;
+        else
+          return task.status === (filter.stt === 1 ? true : false);
+    });
+    }
+
+    if(sort.name === 'name'){
+      tasks.sort((a, b) =>{
+        if(a.name < b.name) return sort.value;
+        else if(a.name > b.name) return -sort.value;
+        else return 0;
+      })
+    }else{
+      tasks.sort((a, b) =>{
+        if(a.status > b.status) return -sort.value;
+        else if(a.status < b.status) return sort.value;
+        else return 0;
+      })
+    }
+
     return (
       <div className="container">
         
@@ -163,13 +242,18 @@ class App extends Component {
                       <i className="fas fa-plus"></i>  Tạo data mẫu
                   </div>&nbsp;
               </div><br/>
-              <br/><Search/>
-              <Sort/>
+              <br/><Search
+                    SearchValue={this.SearchValue}/>
+              <Sort
+                CheckSort={this.CheckSort}
+                sort = {sort}/>
             </div>
             <TaskList 
               apptasks = {tasks}
               ModTask = {this.ModTask} 
-              changeSttApp={this.changeStt}/>
+              changeStt={this.changeStt}
+              DelTask = {this.DelTask}
+              onFilter={this.onFilter}/>
           </div>
               
         </div>

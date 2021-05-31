@@ -9,12 +9,12 @@ class TaskItem extends Component {
         super(props);
     }
 
-    ModTask = (id) =>{
-        this.props.ModTask(id);
+    ModTask = () =>{
+        this.props.ModTask(this.props.listTasks.id);
     }
 
-    DelTask = (id) =>{
-        console.log(id);
+    DelTask = () =>{
+        this.props.DelTask(this.props.listTasks.id);
     }
 
     changeStt = () =>{
@@ -39,12 +39,12 @@ class TaskItem extends Component {
         </td>
         <td>
             <button className="btn btn-warning"
-                onClick = { () => this.ModTask(listTasks.id) }>
+                onClick = { () => this.ModTask() }>
                 <i className="fas fa-pen"
                 ></i> Sửa
             </button>&nbsp;
             <button className="btn btn-danger"
-                onClick = { () => this.DelTask(listTasks.id) }>
+                onClick = { () => this.DelTask() }>
                 <i className="fas fa-trash-alt"></i> Xóa
             </button>
         </td>
